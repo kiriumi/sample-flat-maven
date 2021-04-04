@@ -1,0 +1,64 @@
+plugins {
+    id 'java-library'
+}
+
+// ■前提：メタデータを使用しないため、フラットなリポジトリは、推移的依存関係が機能しなくなるので注意
+
+/*
+ * ■ 方法１
+ * ・フラットなivyリポジトリを作る
+ * ・上記をrepositoriesに定義する
+ * ・上記ivyリポジトリにライブラリを格納する
+ * ・dependencies で使用するライブラリを定義する
+ *
+ * # メリット
+ * ・使用するライブラリのバージョンを指定できる
+ *
+ * # デメリット
+ * ・ivyリポジトリにライブラリを格納した後、個々にdependenciesに定義する必要がある
+ * ・推移的依存関係が機能しないので、dependenciesの定義が面倒くさい
+ * ・上記手間があるため、MavenやGradleの知識がない人にとって、メンテナンスの難易度が高い
+ *
+ */
+repositories {
+
+    ivy {
+        url 'file:///C:/pleiadeses/pleiades-2020-06/workspace/sample-ear/sample-flat-maven/build/depends'
+
+        patternLayout {
+            artifact '[organisation]/[artifact]-[revision].[ext]'
+        }
+
+        metadataSources {
+            artifact()
+        }
+    }
+}
+
+dependencies {
+    implementation group: 'sample', name: 'spring-boot-starter', version: '2.4.4'
+}
+
+/*
+ * ■ 方法２
+ * ・フラットなリポジトリを作る
+ * ・上記リポジトリにライブラリを格納する
+ * ・dependencies で使用するライブラリを定義する
+ *
+ * # メリット
+ * ・リポジトリにライブラリを格納するだけでよい
+ * ・手間が少ないため、MavenやGradleの知識がない人でも、メンテナンスが容易
+ *
+ * # デメリット
+ * ・使用するライブラリのバージョンを指定できない
+ *
+ */
+dependencies {
+
+    implementation fileTree('file:///C:/pleiadeses/pleiades-2020-06/workspace/sample-ear/sample-flat-maven/build/depends') { include 'sample/*.jar' }
+}
+
+task copyDepends(type: Copy) {
+    from configurations.runtimeClasspath
+    into "${buildDir}/depends/sample"
+}
